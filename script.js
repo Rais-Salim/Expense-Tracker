@@ -321,8 +321,12 @@ function validateForm() {
     descInput.classList.remove("border-red-400");
   }
 
-  // Validate amount: must be a positive finite number
-  if (!amount || amount <= 0 || !isFinite(amount)) {
+  // Validate amount:
+  //  - NaN  → field kosong atau bukan angka
+  //  - === 0 → user mengetik "0" (tidak boleh nol)
+  //  - < 0  → tidak mungkin lewat UI, tapi dijaga untuk keamanan
+  const amountInvalid = isNaN(amount) || !isFinite(amount) || amount <= 0;
+  if (amountInvalid) {
     amountError.classList.remove("hidden");
     amountInput.classList.add("border-red-400");
     valid = false;
