@@ -1,0 +1,123 @@
+/* ============================================================
+   Expense Tracker — Custom Styles
+   Tailwind CSS handles utility classes; this file adds only
+   what Tailwind cannot express via CDN config (custom tokens,
+   component-level states, and transitions).
+   ============================================================ */
+
+/* ---------- Color tokens ---------- */
+:root {
+  --income-color: #16a34a;   /* green-600 */
+  --expense-color: #dc2626;  /* red-600   */
+}
+
+/* ---------- Semantic colour helpers ---------- */
+.income-text  { color: var(--income-color);  }
+.expense-text { color: var(--expense-color); }
+
+/* ---------- Input field ---------- */
+.input-field {
+  background-color: #f9fafb; /* gray-50 */
+}
+.input-field:focus {
+  background-color: #ffffff;
+}
+
+/* Remove number input spinners for a cleaner look */
+.input-field[type="number"]::-webkit-inner-spin-button,
+.input-field[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.input-field[type="number"] { -moz-appearance: textfield; }
+
+/* ---------- Radio type buttons ---------- */
+
+/* Default (unselected) state */
+.income-btn {
+  background-color: #f0fdf4; /* green-50  */
+  color: #15803d;             /* green-700 */
+  border-color: #bbf7d0;      /* green-200 */
+}
+
+.expense-btn {
+  background-color: #fff1f2; /* red-50  */
+  color: #b91c1c;             /* red-700 */
+  border-color: #fecdd3;      /* red-200 */
+}
+
+/* Selected state — driven by JS adding `.selected` class */
+.income-btn.selected {
+  background-color: #dcfce7; /* green-100 */
+  border-color: #16a34a;     /* green-600 */
+  color: #15803d;
+}
+
+.expense-btn.selected {
+  background-color: #fee2e2; /* red-100 */
+  border-color: #dc2626;     /* red-600  */
+  color: #b91c1c;
+}
+
+/* ---------- Transaction list item ---------- */
+.transaction-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  border-radius: 0.875rem;
+  border: 1px solid #f3f4f6; /* gray-100 */
+  background-color: #ffffff;
+  gap: 0.75rem;
+  animation: slideIn 0.2s ease;
+}
+
+.transaction-item:hover {
+  border-color: #e5e7eb; /* gray-200 */
+  background-color: #f9fafb;
+}
+
+/* Colour accent bar on the left */
+.transaction-item::before {
+  content: "";
+  display: block;
+  width: 4px;
+  height: 2.2rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+.transaction-item.income::before  { background-color: var(--income-color);  }
+.transaction-item.expense::before { background-color: var(--expense-color); }
+
+/* Amount text colour per type */
+.transaction-item.income  .tx-amount { color: var(--income-color);  }
+.transaction-item.expense .tx-amount { color: var(--expense-color); }
+
+/* ---------- Delete button inside list item ---------- */
+.delete-btn {
+  flex-shrink: 0;
+  opacity: 0;
+  padding: 0.25rem;
+  border-radius: 0.375rem;
+  color: #9ca3af; /* gray-400 */
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+.transaction-item:hover .delete-btn,
+.transaction-item:focus-within .delete-btn {
+  opacity: 1;
+}
+.delete-btn:hover { color: #ef4444; }
+
+/* ---------- Slide-in animation for new items ---------- */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* ---------- Error message visibility ---------- */
+.error-msg { transition: opacity 0.15s ease; }
+
+/* ---------- Responsive: slightly wider on tablet+ ---------- */
+@media (min-width: 640px) {
+  main { padding-top: 2.5rem; padding-bottom: 2.5rem; }
+}
