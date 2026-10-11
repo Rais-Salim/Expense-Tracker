@@ -47,11 +47,68 @@ const footerYear      = document.getElementById("footer-year");
 
 /**
  * Format a number as Indonesian Rupiah.
+ * Uses Intl.NumberFormat with explicit options so the thousands
+ * separator (titik) and decimal separator (koma) are always
+ * consistent across all browsers and operating systems.
+ *
  * @param {number} value
  * @returns {string}  e.g. "Rp 1.250.000"
  */
+const _rupiahFormatter = new Intl.NumberFormat("id-ID", {
+  style:                 "currency",
+  currency:              "IDR",
+  currencyDisplay:       "symbol",   // renders "Rp"
+  minimumFractionDigits: 0,          // no decimals when value is whole
+  maximumFractionDigits: 0,          // strip cents for cleaner display
+});
+
 function formatRupiah(value) {
-  return "Rp " + Math.abs(value).toLocaleString("id-ID");
+  // Intl formats negative numbers with a minus sign; we always pass
+  // Math.abs() because the +/− prefix is handled by the caller.
+  return _rupiahFormatter.format(Math.abs(value));
+}
+
+/**
+ * Format raw digits into a thousands-separated display string for
+ * the amount input field (no currency symbol, just the number).
+ *
+ * Strategy:
+ *  1. Strip every non-digit character from the raw input string.
+ *  2. Parse to integer (raw numeric value, stored in dataset.rawValue).
+ *  3. Re-format with Intl using "decimal" style so we get "1.250.000"
+ *     without the "Rp" prefix — keeping the field clean.
+ *  4. Write the formatted string back into input.value so the user
+ *     sees the separator as they type.
+ *
+ * @param {HTMLInputElement} input  - the amount <input> element
+ */
+const _inputFormatter = new Intl.NumberFormat("id-ID", {
+  style:                 "decimal",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
+
+function formatAmountInput(input) {
+  // 1. Remove all non-digit characters (titik separator, spaces, etc.)
+  const digitsOnly = input.value.replace(/\D/g, "");
+
+  if (digitsOnly === "") {
+    // Empty — clear both display and raw value
+    input.value          = "";
+    input.dataset.rawValue = "";
+    return;
+  }
+
+  // 2. Parse to number (safe: digitsOnly contains only 0-9)
+  const numeric = parseInt(digitsOnly, 10);
+
+  // 3. Store the clean numeric string as the source of truth
+  input.dataset.rawValue = String(numeric);
+
+  // 4. Write formatted value back (e.g. "1250000" → "1.250.000")
+  //    Preserve caret position workaround: since we replace the whole
+  //    value, the cursor jumps to end — acceptable for a numeric field.
+  input.value = _inputFormatter.format(numeric);
 }
 
 /**
@@ -250,7 +307,9 @@ function validateForm() {
   let valid = true;
 
   const description = descInput.value.trim();
-  const amount      = parseFloat(amountInput.value);
+  // Read the raw numeric value stored by formatAmountInput, not the
+  // formatted display string which contains non-numeric separators.
+  const amount      = parseFloat(amountInput.dataset.rawValue || "");
 
   // Validate description
   if (!description) {
@@ -309,8 +368,9 @@ function handleSubmit(e) {
 
 /** Reset form fields to their default state after submission. */
 function resetForm() {
-  descInput.value   = "";
-  amountInput.value = "";
+  descInput.value            = "";
+  amountInput.value          = "";
+  amountInput.dataset.rawValue = "";   // clear raw value alongside display
 
   // Reset to "income" radio
   const incomeRadio = form.querySelector('input[name="type"][value="income"]');
@@ -405,8 +465,12 @@ function init() {
     }
   });
 
+  // Live formatting: apply thousands separator as the user types
   amountInput.addEventListener("input", () => {
-    const v = parseFloat(amountInput.value);
+    formatAmountInput(amountInput);
+
+    // Clear validation error once a valid positive number is present
+    const v = parseFloat(amountInput.dataset.rawValue || "");
     if (v > 0 && isFinite(v)) {
       amountError.classList.add("hidden");
       amountInput.classList.remove("border-red-400");
